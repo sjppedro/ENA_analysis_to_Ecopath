@@ -149,7 +149,7 @@ attributes(trop)
 # analysis to generate plausible model sets using the limSolve package for R. Next, LIM results are converted back into a format
 # readable by enaR and are returned to the user as a set of plausible model parameterizations for use in ENA (Hines et al).
 
-iter = 10 # the number of plausible models to return - if testing the script use a smaller number of iterations as it takes a while to run
+iter = 10000 # the number of plausible models to return - if testing the script use a smaller number of iterations as it takes a while to run
 
 ###############################################################################################
 #percent method with similar uncertainty levels for all edges - ###############################
@@ -185,8 +185,9 @@ plausible.sym.50r <- enaUncertainty(x=WBB, F.sym=f.df, z.sym=z.df, e.sym=e.df, r
 plausible.sym <- enaUncertainty(x=WBB, F.sym=f.df, z.sym=z.df, e.sym=e.df, r.sym=r.df, type="sym", iter=iter)
 
 
-#Plotting to compare the values using boxplots
-# original model
+# Compare the uncertainty distributions of a couple of indicators using different values for respiration
+
+# Original values with no uncertainty
 TST.WBB <- enaFlow(WBB)$ns[2]
 FCI.WBB <- enaFlow(WBB)$ns[5]
 
@@ -206,41 +207,34 @@ FCI.per.pedigree.25.r <- unlist(lapply(plausible.sym.25r, function(x) enaFlow(x)
 FCI.per.pedigree.50.r <- unlist(lapply(plausible.sym.50r, function(x) enaFlow(x)$ns[5]))
 
 
-ENA.ind.test.5 <- as.data.frame(cbind(TST.per.pedigree, FCI.per.pedigree))
-
-write.csv(ENA.ind.test.5, file = "ENA_indicators_10000per_comparisons_5.csv") #save to a csv file to compare results in a plot
-
-TST.comparisons <- read.csv("ENA_indicators_10000per_comparisons_TST.csv")
-FCI.comparisons <- read.csv("ENA_indicators_10000per_comparisons_FCI.csv")
-
 # compare using different uncertainty values with boxplots
 
-tiff("Different_uncertainty_levels_TST.tiff", width = 8, height = 6, units = 'in', res = 500)
+# Use TST indicator as example
 
-colnames(TST.comparisons) <- c("25% all flows", "50% all flows", "Resp flow & pedigree")
+TST.plot.data=cbind(TST.per.25, TST.per.50, TST.per.pedigree)
+colnames(TST.plot.data) <- c("all 25%", "all 50%", "all pedigree")
 par(las=1)
-bp=boxplot(TST.comparisons, main="TST")
-points(x=c(1,2,3,4,5), y=rep(TST.Ecopath, 5), col="red", pch=16, cex=1)
+bp=boxplot(TST.plot.data, main="TST")
+points(x=c(1,2,3), y=rep(TST.WBB, 3), col="red", pch=16, cex=1)
 legend("bottomleft", legend=c("original model"), pch=16, col="red", bty="n", cex=0.75)
 
-dev.off()
 
+# Use FCI indicator as example
 
-tiff("Different_uncertainty_levels_FCI.tiff", width = 8, height = 6, units = 'in', res = 500)
-
-colnames(FCI.comparisons) <- c("25% all flows", "50% all flows", "Resp flow & pedigree")
+FCI.plot.data=cbind(FCI.per.25, FCI.per.50, FCI.per.pedigree)
+colnames(FCI.plot.data) <- c("all 25%", "all 50%", "all pedigree")
 par(las=1)
-bp=boxplot(FCI.comparisons, main="FCI")
-points(x=c(1,2,3,4,5), y=rep(FCI.Ecopath, 5), col="red", pch=16, cex=1)
+bp=boxplot(FCI.plot.data, main="FCI")
+points(x=c(1,2,3), y=rep(FCI.WBB, 3), col="red", pch=16, cex=1)
 legend("bottomleft", legend=c("original model"), pch=16, col="red", bty="n", cex=0.75)
 
-dev.off()
+
 
 ######################
 
 # comparison of several methods for respiration flows
 
-tiff("Respiration_uncertainty_TST.tiff", width = 8, height = 6, units = 'in', res = 500)
+# Use TST indicator as example
 
 TST.plot.data=cbind(TST.per.pedigree, TST.per.pedigree.25.r, TST.per.pedigree.50.r, TST.per.pedigree.10.r)
 colnames(TST.plot.data) <- c("pedigree", "pedigree.r25%", "pedigree.r50%", "pedigree.r10%")
@@ -249,9 +243,9 @@ bp=boxplot(TST.plot.data, main="TST")
 points(x=c(1,2,3,4), y=rep(TST.WBB, 4), col="red", pch=16, cex=1)
 legend("bottomleft", legend=c("original model"), pch=16, col="red", bty="n", cex=0.75)
 
-dev.off()
 
-tiff("Respiration_uncertainty_FCI.tiff", width = 8, height = 6, units = 'in', res = 500)
+
+# Use FCI indicator as example
 
 FCI.plot.data=cbind(FCI.per.pedigree, FCI.per.pedigree.25.r, FCI.per.pedigree.50.r, FCI.per.pedigree.10.r)
 colnames(FCI.plot.data) <- c("pedigree", "pedigree.r25%", "pedigree.r50%", "pedigree.r10%")
@@ -260,10 +254,11 @@ bp2=boxplot(FCI.plot.data, main="FCI")
 points(x=c(1,2,3,4), y=rep(FCI.WBB, 4), col="red", pch=16, cex=1)
 legend("bottomleft", legend=c("original model"), pch=16, col="red", bty="n", cex=0.75)
 
-dev.off()
+
+#######################################################################################################
 
 
-# extract indicators from ena results with uncertainty from pedigree
+# Extract indicators from ena results with uncertainty from pedigree
 
 APL.per.pedigree <- unlist(lapply(plausible.sym, function(x) enaFlow(x)$ns[4])) #average path length
 FCI.per.pedigree <- unlist(lapply(plausible.sym, function(x) enaFlow(x)$ns[5])) #Fin's Cycling Index
@@ -286,12 +281,11 @@ TST.WBB <- enaFlow(WBB)$ns[2]
 robustness.WBB <- enaAscendency(WBB)[[9]]
 
 
-
 # save a table with the permutations for all these indices
 ENA.indicators <- as.data.frame(cbind(AMI.per.pedigree, APL.per.pedigree, TST.per.pedigree, FCI.per.pedigree, asc.per.pedigree, rel.asc.per.pedigree,
                                       IFI.per.pedigree))
 
-write.csv(ENA.indicators, file = "ENA_indicators_10000per.csv")
+write.csv(ENA.indicators, file = "ENA_indicators_10000per.csv") #save distribution of indicators to avoid permuting every time
 
 
 # density plots
@@ -309,7 +303,7 @@ AMI.plot <- ggplot(ENA.indicators, aes(x=AMI.per.pedigree)) +
                   panel.background = element_blank())
 
 
-APL.plot <- ggplot(ENA.indicators.resp.zoo, aes(x=APL.per.pedigree)) + 
+APL.plot <- ggplot(ENA.indicators, aes(x=APL.per.pedigree)) + 
   geom_density(alpha = 0.4, fill = "coral", color = "coral3") + 
   geom_vline(aes(xintercept=mean(APL.per.pedigree)), color="coral3", linetype="dashed", size=1) +
   geom_vline(aes(xintercept=APL.WBB), color="black", linetype="dotted", size=1) +
@@ -323,7 +317,7 @@ APL.plot <- ggplot(ENA.indicators.resp.zoo, aes(x=APL.per.pedigree)) +
         panel.background = element_blank())
 
 
-FCI.plot <- ggplot(ENA.indicators.resp.zoo, aes(x=FCI.per.pedigree)) + 
+FCI.plot <- ggplot(ENA.indicators, aes(x=FCI.per.pedigree)) + 
   geom_density(alpha = 0.4, fill = "coral", color = "coral3") + 
   geom_vline(aes(xintercept=mean(FCI.per.pedigree)), color="coral3", linetype="dashed", size=1) +
   geom_vline(aes(xintercept=FCI.WBB), color="black", linetype="dotted", size=1) +
@@ -336,7 +330,7 @@ FCI.plot <- ggplot(ENA.indicators.resp.zoo, aes(x=FCI.per.pedigree)) +
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         panel.background = element_blank())
 
-TST.plot <- ggplot(ENA.indicators.resp.zoo, aes(x=TST.per.pedigree)) + 
+TST.plot <- ggplot(ENA.indicators, aes(x=TST.per.pedigree)) + 
   geom_density(alpha = 0.4, fill = "lightgreen", color = "darkgreen") + 
   geom_vline(aes(xintercept=mean(TST.per.pedigree)), color="darkgreen", linetype="dashed", size=1) +
   geom_vline(aes(xintercept=TST.WBB), color="black", linetype="dotted", size=1) +
@@ -349,7 +343,7 @@ TST.plot <- ggplot(ENA.indicators.resp.zoo, aes(x=TST.per.pedigree)) +
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         panel.background = element_blank()) 
 
-asc.plot <- ggplot(ENA.indicators.resp.zoo, aes(x=asc.per.pedigree)) + 
+asc.plot <- ggplot(ENA.indicators, aes(x=asc.per.pedigree)) + 
   geom_density(alpha = 0.4, fill = "lightgreen", color="darkgreen") + 
   geom_vline(aes(xintercept=mean(asc.per.pedigree)), color="darkgreen", linetype="dashed", size=1) +
   geom_vline(aes(xintercept=asc.WBB), color="black", linetype="dotted", size=1) +
@@ -362,7 +356,7 @@ asc.plot <- ggplot(ENA.indicators.resp.zoo, aes(x=asc.per.pedigree)) +
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         panel.background = element_blank())
 
-rel.asc.plot <- ggplot(ENA.indicators.resp.zoo, aes(x=rel.asc.per.pedigree)) + 
+rel.asc.plot <- ggplot(ENA.indicators, aes(x=rel.asc.per.pedigree)) + 
   geom_density(alpha = 0.4, fill = "lightgreen", color="darkgreen") + 
   geom_vline(aes(xintercept=mean(rel.asc.per.pedigree)), color="darkgreen", linetype="dashed", size=1) +
   geom_vline(aes(xintercept=rel.asc.WBB), color="black", linetype="dotted", size=1) +
@@ -375,7 +369,7 @@ rel.asc.plot <- ggplot(ENA.indicators.resp.zoo, aes(x=rel.asc.per.pedigree)) +
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         panel.background = element_blank())
 
-IFI.plot <- ggplot(ENA.indicators.resp.zoo, aes(x=IFI.per.pedigree)) + 
+IFI.plot <- ggplot(ENA.indicators, aes(x=IFI.per.pedigree)) + 
   geom_density(alpha = 0.4, fill = "coral", color = "coral3") + 
   geom_vline(aes(xintercept=mean(IFI.per.pedigree)), color="coral3", linetype="dashed", size=1) +
   geom_vline(aes(xintercept=IFI.WBB), color="black", linetype="dotted", size=1) +
@@ -388,39 +382,6 @@ IFI.plot <- ggplot(ENA.indicators.resp.zoo, aes(x=IFI.per.pedigree)) +
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         panel.background = element_blank())
 
-rob.plot <- ggplot(ENA.indicators.resp.zoo, aes(x=robustness.per.pedigree)) + 
-  geom_density(alpha = 0.4, fill = "lightgreen", color="darkgreen") + 
-  geom_vline(aes(xintercept=mean(robustness.per.pedigree)), color="darkgreen", linetype="dashed", size=1) +
-  geom_vline(aes(xintercept=robustness.WBB), color="black", linetype="dotted", size=1) +
-  xlab("Robustness") + ylab("") +
-  theme_bw() + #xlim(4200, 4650) +
-  scale_y_continuous(expand = c(0,0)) +
-  theme(axis.text.y = element_text(color="black"),
-        axis.text.x = element_text(color = "black"),
-        plot.margin =unit(c(0.1, 0.1, 0.1, 0.1), "cm"),
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
-        panel.background = element_blank())
-
-#save plots
-
-tiff("Density_plots_1.tiff", width = 4, height = 8, units = 'in', res = 500)
-
-panel.plots1 <- rbind(ggplotGrob(rob.plot), ggplotGrob(FCI.plot), ggplotGrob(IFI.plot), ggplotGrob(APL.plot), size = "first")
-panel.plots1$widths <- unit.pmax(ggplotGrob(FCI.plot)$widths, ggplotGrob(IFI.plot)$widths, ggplotGrob(APL.plot)$widths)
-grid.newpage()
-grid.draw(panel.plots1)
-
-dev.off()
-
-tiff("Density_plots_2.tiff", width = 4, height = 8, units = 'in', res = 500)
-
-panel.plots2 <- rbind(ggplotGrob(TST.plot), ggplotGrob(AMI.plot), ggplotGrob(asc.plot), ggplotGrob(rel.asc.plot), size = "first")
-panel.plots2$widths <- unit.pmax(ggplotGrob(TST.plot)$widths, ggplotGrob(AMI.plot)$widths, ggplotGrob(asc.plot)$widths, 
-                                ggplotGrob(rel.asc.plot)$widths)
-grid.newpage()
-grid.draw(panel.plots2)
-
-dev.off()
 
 
 
@@ -439,7 +400,9 @@ f.group <- rep(c("KILLER WHALE", "POLAR BEAR", "NARWHAL", "BOWHEAD WHALE", "RING
              "POLYCHAETES", "ECHINODERMATA", "BIVALVES", "OTHER BENTHOS", "BACTERIA", "ICE ALGAE", "PHYTOPLANKTON", "DETRITUS"), times = 10000)
 
 system.control <- data.frame(f.group, sc.per.pedigree)
-write.csv(system.control, file = "system.control.10000per.csv") #not sure how the matrix is organized when doing the permutations 
+write.csv(system.control, file = "system.control.10000per.csv")  #save as csv file to avoid doing permutations everytime
+
+system.control.resp.zoo.open <- read.csv("system.control.10000per.csv") 
 
 
 # plotting the system control
@@ -458,25 +421,15 @@ system.control.resp.zoo.open$groupN <- rep(c(1:30),times=10000)
 
 system.control.t <- system.control.resp.zoo.open %>%
   group_by(f.group) %>%
-  summarize(sd.sc = sd(sc.per.resp.zoo), error = qnorm(0.975)*sd.sc/sqrt(iter)) # lower and upper error for each group
+  summarize(sd.sc = sd(sc.per.pedigree), error = qnorm(0.975)*sd.sc/sqrt(iter)) # lower and upper error for each group
 
 sys.control <- sys.control %>% left_join(system.control.t)
 
-# respiration uncertainty levels
-
-
-system.control.resp.zoo$f.group[system.control.resp.zoo$f.group=="MARINE WORMS"]<-"POLYCHAETES"
-
-system.control.t.resp <- system.control.resp.zoo %>%
-  group_by(f.group) %>%
-  summarize(sd.sc = sd(sc.per.resp.zoo), error = qnorm(0.975)*sd.sc/sqrt(iter)) # lower and upper error for each group
-
-sys.control.resp <- sys.control %>% left_join(system.control.t.resp)
 
 
 # Plot
 
-sys.cont.plot <- ggplot(sys.control.resp, aes(x = f.group, y = sc)) +
+sys.cont.plot <- ggplot(sys.control, aes(x = f.group, y = sc)) +
   geom_bar(color = "purple3", size = 0.3, stat = "identity", fill = "purple", alpha = 0.4) +
   geom_errorbar(aes(ymin=sc-sd.sc, ymax=sc+sd.sc), width=0.3, size = 0.3) +
   xlab("") + ylab("System Control") +
@@ -490,9 +443,8 @@ sys.cont.plot <- ggplot(sys.control.resp, aes(x = f.group, y = sc)) +
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         panel.background = element_blank())
 
-tiff("system.control.resp.uncertainty.zoo.tiff", width = 6, height = 5, units = 'in', res = 500)
 sys.cont.plot
-dev.off()
+
 
 
 # plotting the control difference matrix
@@ -519,71 +471,6 @@ CD.plot <- ggplot(longData, aes(x = variable, y = group)) +
                      plot.title=element_text(size=11), panel.grid = element_blank())
 
 
-tiff("control.diff.colors.zoo.tiff", width = 8, height = 6, units = 'in', res = 500)
 CD.plot
-dev.off()
-
-
-
-# Plotting the network
-## Set the random seed to control plot output
-set.seed(2)
-
-network1 <- ggnet2(WBB, node.size = 6, node.color = "tomato3", edge.size = 0.5, edge.color = "grey", label = TRUE, label.size = 3)
-
-ggnet2(WBB, size = nodes$biomass, label = TRUE, label.size = 3)
-
-
-tiff("network1.tiff", width = 8, height = 6, units = 'in', res = 500)
-network1
-dev.off()
-
-#there are a few more packages out there that I can explore for this (can also use it for the Arctic cod paper)
-install.packages("igraph")
-install.packages("network")
-install.packages("sna")
-install.packages("ndtv")
-
-WBB%v%'output'
-WBB%v%'input'
-WBB%v%'living'
-WBB%v%'respiration' 
-WBB%v%'storage'
-WBB%v%'vertex.names'
-WBB%v%'export'
-
-flows_matrix <- as.matrix(WBB,attrname="flow")
-consoT<-colSums(flows_matrix)
-diet_perc_WBB<-flows_matrix %*% diag(1/consoT) #convert to a proportion
-cons_flows_WBB <- as.data.frame(diet_perc_WBB)
-rownames(cons_flows_WBB)[rownames(cons_flows_WBB) == "MARINE WORMS"] <- "POLYCHAETES"
-Species<-replace(WBB%v%'vertex.names', 23,'POLYCHAETES')
-from <- rep(rownames(cons_flows_WBB),30)
-to_to <- rep(rownames(cons_flows_WBB),each = 30)
-
-TL<- c("#66C2A5", "#66C2A5", "#FC8D62", "#8DA0CB", "#FC8D62", "#FC8D62", "#8DA0CB", "#8DA0CB", "#FC8D62", "#FC8D62", "#8DA0CB", "#8DA0CB", "#8DA0CB", "#8DA0CB", "#8DA0CB", "#8DA0CB", "#E78AC3", "#8DA0CB", "#8DA0CB", "#E78AC3", "#E78AC3", "#E78AC3", "#E78AC3",
-        "#E78AC3", "#E78AC3", "#E78AC3", "#E78AC3", "#FFD92F", "#FFD92F", "#FFD92F") #based on color pallet Set2, which is color friendly
-brewer.pal(n = 8, name = "Set2") # "#66C2A5" "#FC8D62" "#8DA0CB" "#E78AC3" "#A6D854" "#FFD92F" "#E5C494" "#B3B3B3"
-
-links <- cons_flows_WBB %>% gather() %>% rename(to = key, flow = value) %>% mutate(from = from, to = to_to) %>% relocate(from, to, flow)
-nodes <- as.data.frame(cbind(Species = Species, biomass = WBB%v%'storage', TL = TL)) 
-
-links <- links %>% filter(flow != 0)
-
-net <- graph.data.frame(links, nodes, directed=T)
-
-deg <- degree(net, mode="all")
-V(net)$size <- deg/2
-E(net)$width <- E(net)$flow*5
-
-tiff("network1.tiff", width = 8, height = 8, units = 'in', res = 500)
-
-plot(net, vertex.label.cex=.5,vertex.label.color="black", vertex.color = nodes$TL, 
-     edge.color = "gray", edge.arrow.size=.2, layout = layout.auto, vertex.label.family="Arial")
-
-legend("right", legend=c("TL 1", "TL 2","TL 3", "TL 4", "TL 5"), 
-       fill=c("#FFD92F", "#E78AC3", "#8DA0CB", "#FC8D62", "#66C2A5"), cex=0.6, box.lwd = 0,box.col = "white",bg = "white")
-dev.off()
-
 
 
