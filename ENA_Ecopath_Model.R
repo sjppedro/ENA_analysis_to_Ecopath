@@ -64,17 +64,17 @@ font_import()
 
 rho <- 3.15/20.4
 
-phy_r <- (530.4 + 276.2)*(rho/(1-rho))
-SIA_r <- (432.06 + 144.1)*(rho/(1-rho))
+phy_r <- (639.89 + 376.2)*(rho/(1-rho))
+SIA_r <- (158.014 + 55.85)*(rho/(1-rho))
 
-phy_a <- phy_r + 530.4 + 276.2
-SIA_a <- SIA_r + 432.06 + 144.1
+phy_a <- phy_r + 639.89 + 376.2
+SIA_a <- SIA_r + 158.014 + 55.85
 
 #These values were added to the SCOR format text file.
 
 # Load data
 
-WBB <- read.scor("WBB_model12_SCOR.txt", from.file = TRUE, warn = TRUE)
+WBB <- read.scor("WBB_model12_SCOR_2022.txt", from.file = TRUE, warn = TRUE)
 
 #In the enaR package, a complete ecosystem network model description includes:
 # F - flow matrix, oriented row-to-column
